@@ -8,15 +8,14 @@
     {{ block.super }}
     {% block lc_metadata %}{% endblock lc_metadata %}
     <link href="{% static 'img-std/fav.ico' %}" rel="shortcut icon"/>
-    <link title="NDNP Page Search" href="{% url chronam_search_pages_opensearch %}"
+    <link title="NY Heritage Digital Collections Page Search" href="{% url chronam_search_pages_opensearch %}"
           rel="search" type="application/opensearchdescription+xml" />
-    <link title="NDNP Title Search" href="{% url chronam_search_titles_opensearch %}"
+    <link title="NY Heritage Digital Collections Title Search" href="{% url chronam_search_titles_opensearch %}"
           rel="search" type="application/opensearchdescription+xml" />
-    <link rel="alternate" type="application/rss+xml" title="News about Chronicling America - RSS Feed" 
-          href="http://www.loc.gov/rss/ndnp/ndnp.xml" />
+    
     <meta http-equiv="Content-Language" content="en-us" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <link type="text/css" rel="stylesheet" href="{% static 'base.css' %}" />
+    <link type="text/css" rel="stylesheet" href="{% static 'style.css' %}" />
     <link type="text/css" rel="stylesheet"
           href="{% static 'jquery-ui.css' %}" />
     <link type="text/css" rel="styelsheet" href="{% static 'ui_carousel.css' %}" />
@@ -104,7 +103,6 @@
 <script src="{% static 'js/jquery-ui.js' %}" ></script>
 
 <script type="text/javascript">
-
 jQuery(function ($) {
     var searchString = window.location.search.substring(1);
     if (searchString) {
@@ -117,9 +115,6 @@ jQuery(function ($) {
     });
 });
 </script>
-
-<script type="text/javascript" src="{% static 'js/jquery.ba-bbq.min.js' %}"></script> 
-<script type="text/javascript" src="{% static 'js/main.js' %}"></script>
 
 {% if sharetool_url %}
 <!-- Toolbar -->

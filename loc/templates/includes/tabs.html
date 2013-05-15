@@ -21,6 +21,9 @@
                 <!-- state -->
                 {{ search_form.state}}
                 <span class="plus">+</span>
+                <!-- county -->
+                {{ search_form.county}}
+                <span class="plus">+</span>
                 <!-- date -->
                 <label for="id_date1">from</label>
                 {{ search_form.date1 }} 
@@ -44,6 +47,13 @@
                 <label for="id_states">Select State(s):</label><br />
                 {{ adv_search_form.state }}
             </div>
+            
+            <!-- county -->
+            <div class="fl-wrap">
+                <label for="id_counties">Select Countie(s):</label><br />
+                {{ adv_search_form.county }}
+            </div>
+
             <!-- newspaper -->
             <div class="fl-wrap">
                 <label for="id_lccns">Or Select Newspaper(s):</label><br />
@@ -152,3 +162,6 @@
         </form>
     </div>
 </div><!-- end box-tabs -->
+
+<script src="{% static 'js/main.js' %}"></script>
+<script src="{% static 'js/jquery.ba-bbq.min.js' %}"></script> 

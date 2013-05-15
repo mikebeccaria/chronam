@@ -149,7 +149,7 @@ class SolrPaginator(Paginator):
                                    sort_order=sort_order,
                                    start=start,
                                    **params)
-
+        #print "result: " + str(solr_response.results)
         pages = []
         for result in solr_response.results:
             page = models.Page.lookup(result['id'])
@@ -157,6 +157,14 @@ class SolrPaginator(Paginator):
                 continue
             words = set()
             coords = solr_response.highlighting[result['id']]
+            page.highlights = []
+            if coords.has_key('ocr'):
+                if coords['ocr']:
+                    for line in coords['ocr']:
+                        page.highlights.append(line.replace("<em>","<b>").replace("</em>","</b>"))
+            #page.highlights = coords['ocr'].replace("<em>",<b>)
+            else:
+                page.highlights.append("")
             for ocr in self._ocr_list:
                 for s in coords.get(ocr) or []:
                     words.update(find_words(s))
@@ -368,6 +376,9 @@ def page_search(d):
     if d.get('state', None):
         q.append(query_join(d.getlist('state'), 'state'))
 
+    if d.get('county', None):
+        q.append(query_join(d.getlist('county'), 'county'))
+        
     date_filter_type = d.get('dateFilterType', None)
     if date_filter_type == 'year' and d.get('year', None):
         q.append('+date:[%(year)s0101 TO %(year)s1231]' % d)

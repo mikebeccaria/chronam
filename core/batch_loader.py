@@ -106,6 +106,14 @@ class BatchLoader(object):
           loader.load_batch('/path/to/batch_curiv_ahwahnee_ver01')
 
         """
+        
+        #calls a batch based on the name of the metadata_standard variable. "loc" loads _load_batch_loc()
+        
+        metadata_standard = settings.METADATA_STANDARD
+        
+        getattr(self, "_load_batch_%s" % (metadata_standard))(batch_location)
+        
+    def _load_batch_loc(self, batch_location, strict=True):
         self.pages_processed = 0
 
         logging.info("loading batch at %s", batch_path)
@@ -200,6 +208,103 @@ class BatchLoader(object):
 
         return batch
 
+
+    def _load_batch_nnyln(self, batch_location, strict=True):
+        self.pages_processed = 0
+
+        logging.info("loading batch at %s", batch_path)
+        dirname, batch_name = os.path.split(batch_path.rstrip("/"))
+        if dirname:
+            batch_source = None
+            link_name = os.path.join(settings.BATCH_STORAGE, batch_name)
+            if batch_path != link_name and not os.path.islink(link_name):
+                _logger.info("creating symlink %s -> %s", batch_path, link_name)
+                os.symlink(batch_path, link_name)
+        else:
+            batch_source = urlparse.urljoin(settings.BATCH_STORAGE, batch_name)
+            if not batch_source.endswith("/"):
+                batch_source += "/"
+
+        batch_name = _normalize_batch_name(batch_name)
+        if not strict:
+            try:
+                batch = Batch.objects.get(name=batch_name)
+                _logger.info("Batch already loaded: %s" % batch_name)
+                return batch
+            except Batch.DoesNotExist, e:
+                pass
+
+        _logger.info("loading batch: %s" % batch_name)
+        t0 = time()
+        times = []
+
+        event = LoadBatchEvent(batch_name=batch_name, message="starting load")
+        event.save()
+
+        batch = None
+        try:
+            # build a Batch object for the batch location
+            batch = self._get_batch(batch_name, batch_source, create=True)
+            self._sanity_check_batch(batch)
+
+            # stash it away for processing later on
+            self.current_batch = batch
+
+            # parse the batch.xml and load up each issue mets file
+            doc = etree.parse(batch.validated_batch_url)
+
+            #for e in doc.xpath('ndnp:reel', namespaces=ns):
+            #    
+            #    reel_number = e.attrib['reelNumber'].strip()
+            #    
+            #    try:
+            #        reel = models.Reel.objects.get(number=reel_number, 
+            #                                       batch=batch)
+            #    except models.Reel.DoesNotExist, e:
+            #        reel = models.Reel(number=reel_number, batch=batch)
+            #        reel.save()
+
+            for e in doc.xpath('ndnp:issue', namespaces=ns):
+                mets_url = urlparse.urljoin(batch.storage_url, e.text)
+                try:
+                    issue = self._load_issue_nnyln(mets_url)
+                except ValueError, e:
+                    _logger.exception(e)
+                    continue
+                reset_queries()
+                times.append((time() - t0, self.pages_processed))
+
+            # commit new changes to the solr index, if we are indexing
+            if self.PROCESS_OCR:
+                self.solr.commit()
+            
+            batch.save()
+            msg = "processed %s pages" % batch.page_count
+            event = LoadBatchEvent(batch_name=batch_name, message=msg)
+            _logger.info(msg)
+            event.save()
+
+            _chart(times)
+        except Exception, e:
+            msg = "unable to load batch: %s" % e
+            _logger.error(msg)
+            _logger.exception(e)
+            event = LoadBatchEvent(batch_name=batch_name, message=msg)
+            event.save()
+            try:
+                self.purge_batch(batch_name)
+            except Exception, pbe:
+                _logger.error("purge batch failed for failed load batch: %s" % pbe)
+                _logger.exception(pbe)
+            raise BatchLoaderException(msg)
+
+        if settings.IS_PRODUCTION:
+            batch.released = datetime.now()
+            batch.save()
+
+        return batch
+
+
     def _get_batch(self, batch_name, batch_source=None, create=False):
         if create:
             batch = self._create_batch(batch_name, batch_source)
@@ -275,6 +380,87 @@ class BatchLoader(object):
             notes.append(note) 
         issue.notes = notes 
         issue.save()
+
+        # attach pages: lots of logging because it's expensive
+        for page_div in div.xpath('.//mets:div[@TYPE="np:page"]', 
+                                  namespaces=ns):
+            try:
+                page = self._load_page(doc, page_div, issue)
+                self.pages_processed += 1
+            except BatchLoaderException, e:
+                _logger.exception(e)
+
+        return issue
+    
+    def _load_issue_nnyln(self, metadata_file):
+        _logger.debug("parsing issue mets file: %s" % metadata_file)
+        doc = etree.parse(metadata_file)
+
+        # get the mods for the issue
+        #div = doc.xpath('.//mets:div[@TYPE="np:issue"]', namespaces=ns)[0]
+        #dmdid = div.attrib['DMDID']
+        #mods = dmd_mods(doc, dmdid)
+
+        div = doc.xpath('//pages')[0]
+
+        # set up a new Issue
+        issue = Issue()
+        #issue.volume = mods.xpath(
+        #    'string(.//mods:detail[@type="volume"]/mods:number[1])', 
+        #    namespaces=ns).strip()
+        issue.volume = div.attrib['volume']
+
+        
+        #issue.number = mods.xpath(
+        #    'string(.//mods:detail[@type="issue"]/mods:number[1])', 
+        #    namespaces=ns).strip()
+        
+        issue.number = div.attrib['issue']
+        
+        #issue.edition = int(mods.xpath( 
+        #        'string(.//mods:detail[@type="edition"]/mods:number[1])', 
+        #        namespaces=ns))
+        
+        issue.edition = div.attrib['edition']
+        
+        #issue.edition_label = mods.xpath( 
+        #        'string(.//mods:detail[@type="edition"]/mods:caption[1])', 
+        #        namespaces=ns).strip()
+
+        issue.edition_label = div.attrib['edition_label']
+
+        # parse issue date
+        #date_issued = mods.xpath('string(.//mods:dateIssued)', namespaces=ns)
+        date_issued = div.attrib['issueDate']
+        issue.date_issued = datetime.strptime(date_issued, '%Y-%m-%d')
+
+        # attach the Issue to the appropriate Title
+        #lccn = mods.xpath('string(.//mods:identifier[@type="lccn"])', 
+        #    namespaces=ns).strip()
+        
+        lccn = div.attrib['lccn']
+
+        
+        try:
+            title = Title.objects.get(lccn=lccn)
+        except Exception, e:
+            management.call_command('load_titles', 'http://chroniclingamerica.loc.gov/lccn/%s/marc.xml' % lccn)
+            title = Title.objects.get(lccn=lccn)
+        issue.title = title
+
+        issue.batch = self.current_batch
+        issue.save()
+        _logger.debug("saved issue: %s" % issue.url)
+
+        #notes = [] 
+        #for mods_note in mods.xpath('.//mods:note', namespaces=ns): 
+        #    type = mods_note.xpath('string(./@type)') 
+        #    label = mods_note.xpath('string(./@displayLabel)') 
+        #    text = mods_note.xpath('string(.)') 
+        #    note = models.IssueNote(type=type, label=label, text=text) 
+        #    notes.append(note) 
+        #issue.notes = notes 
+        #issue.save()
 
         # attach pages: lots of logging because it's expensive
         for page_div in div.xpath('.//mets:div[@TYPE="np:page"]', 
@@ -409,6 +595,162 @@ class BatchLoader(object):
         _logger.debug("saving page: %s" % page.url)
         page.save()
         return page
+    
+    
+    def _load_page_nnyln(self, doc, div, issue):
+        #dmdid = div.attrib['DMDID']
+        #mods = dmd_mods(doc, dmdid)
+        page = Page()
+        
+        #seq_string = mods.xpath(
+        #    'string(.//mods:extent/mods:start)', namespaces=ns)
+        
+        
+        seq_string = div.attrib['page_sequence']
+        try:
+            page.sequence = int(seq_string)
+        except ValueError, e:
+            raise BatchLoaderException("could not determine sequence number for page from '%s'" % seq_string)
+        #page.number = mods.xpath(
+        #    'string(.//mods:detail[@type="page number"])', 
+        #    namespaces=ns
+        #    ).strip()
+        page.number = seq_string
+
+        #reel_number = mods.xpath(
+        #    'string(.//mods:identifier[@type="reel number"])', 
+        #    namespaces=ns
+        #    ).strip()
+        #try:
+        #    reel = models.Reel.objects.get(number=reel_number, 
+        #                                   batch=self.current_batch)
+        #    page.reel = reel
+        #except models.Reel.DoesNotExist, e:
+        #    if reel_number:
+        #        reel = models.Reel(number=reel_number,
+        #                           batch=self.current_batch,
+        #                           implicit=True)
+        #        reel.save()
+        #        page.reel = reel
+        #    else:
+        #        _logger.warn("unable to find reel number in page metadata")
+
+        _logger.info("Assigned page sequence: %s" % page.sequence)
+
+        #_section_dmdid = div.xpath(
+        #    'string(ancestor::mets:div[@TYPE="np:section"]/@DMDID)',
+        #    namespaces=ns)
+        #if _section_dmdid:
+        #    section_mods = dmd_mods(doc, _section_dmdid)
+        #    section_label = section_mods.xpath(
+        #        'string(.//mods:detail[@type="section label"]/mods:number[1])', 
+        #        namespaces=ns).strip()
+        #    if section_label:
+        #        page.section_label = section_label
+
+        page.issue = issue
+
+        _logger.info("Saving page. issue date: %s, page sequence: %s" % (issue.date_issued, page.sequence))
+
+        # TODO - consider the possibility of executing the file name
+        #        assignments (below) before this page.save().
+        page.save()
+
+        #notes = []
+        #for mods_note in mods.xpath('.//mods:note', namespaces=ns):
+        #    type = mods_note.xpath('string(./@type)')
+        #    label = mods_note.xpath('string(./@displayLabel)')
+        #    text = mods_note.xpath('string(.)').strip()
+        #    note = models.PageNote(type=type, label=label, text=text)
+        #    notes.append(note)
+        #page.notes = notes
+            
+
+        # there's a level indirection between the METS structmap and the
+        # details about specific files in this package ...
+        # so we have to first get the FILEID from the issue div in the 
+        # structmap and then use it to look up the file details in the
+        # larger document. 
+
+        #print "TESTING: " + self.batch.location
+        fileName, fileExtension = os.path.splitext(div.attrib['ocr'])
+        page.tiff_filename = div.attrib['tif']
+        page.jp2_filename = div.attrib['jpf']
+        page.pdf_filename = div.attrib['pdf']
+        page.ocr_filename = div.attrib['ocr']
+       
+        
+        try:
+            ocr_doc = etree.parse(page.ocr_abs_filename)
+            ocr_div = ocr_doc.xpath('//Page')[0]
+            page.jp2_width = float(ocr_div.attrib['WIDTH'])
+            page.jp2_length = float(ocr_div.attrib['HEIGHT'])
+            #print "TEST HEIGHT " + ocr_div.attrib['HEIGHT']
+        except KeyError, e:
+            _logger.info("Could not determine dimensions of jp2 for issue: %s page: %s... trying harder..." % (page.issue, page))
+            if j2k:
+                width, length = j2k.dimensions(page.jp2_abs_filename)
+                page.jp2_width = width
+                page.jp2_length = length
+            #raise BatchLoaderException("Could not determine dimensions of jp2 for issue: %s page: %s" % (page.issue, page))
+        if not page.jp2_width:
+            raise BatchLoaderException("No jp2 width for issue: %s page: %s" % (page.issue, page))
+        if not page.jp2_length:
+            raise BatchLoaderException("No jp2 length for issue: %s page: %s" % (page.issue, page))
+
+
+        #for fptr in div.xpath('./mets:fptr', namespaces=ns):
+        #    file_id = fptr.attrib['FILEID']
+        #    file_el = doc.xpath('.//mets:file[@ID="%s"]' % file_id, 
+        #        namespaces=ns)[0]
+        #    file_type = file_el.attrib['USE']
+        #
+        #    # get the filename relative to the storage location
+        #    file_name = file_el.xpath('string(./mets:FLocat/@xlink:href)', 
+        #        namespaces=ns)
+        #    file_name = urlparse.urljoin(doc.docinfo.URL, file_name)
+        #    file_name = self.storage_relative_path(file_name)
+        #
+        #    if file_type == 'master':
+        #        page.tiff_filename = file_name
+        #    elif file_type == 'service':
+        #        page.jp2_filename = file_name
+        #        try:
+        #            # extract image dimensions from technical metadata for jp2
+        #            for admid in file_el.attrib['ADMID'].split(' '):
+        #                length, width = get_dimensions(doc, admid)
+        #                if length and width:
+        #                    page.jp2_width = width
+        #                    page.jp2_length = length
+        #                    break
+        #        except KeyError, e:
+        #            _logger.info("Could not determine dimensions of jp2 for issue: %s page: %s... trying harder..." % (page.issue, page))
+        #            if j2k:
+        #                width, length = j2k.dimensions(page.jp2_abs_filename)
+        #                page.jp2_width = width
+        #                page.jp2_length = length
+        #            #raise BatchLoaderException("Could not determine dimensions of jp2 for issue: %s page: %s" % (page.issue, page))
+        #        if not page.jp2_width:
+        #            raise BatchLoaderException("No jp2 width for issue: %s page: %s" % (page.issue, page))
+        #        if not page.jp2_length:
+        #            raise BatchLoaderException("No jp2 length for issue: %s page: %s" % (page.issue, page))
+        #    elif file_type == 'derivative':
+        #        page.pdf_filename = file_name
+        #    elif file_type == 'ocr':
+        #        page.ocr_filename = file_name
+
+        if page.ocr_filename:
+            # don't incurr overhead of extracting ocr text, word coordinates
+            # and indexing unless the batch loader has been set up to do it
+            if self.PROCESS_OCR:
+                self.process_ocr(page)
+        else:
+            _logger.info("No ocr filename for issue: %s page: %s" % (page.issue, page))
+
+        _logger.debug("saving page: %s" % page.url)
+        page.save()
+        return page
+    
 
     def process_ocr(self, page, index=True):
         _logger.debug("extracting ocr text and word coords for %s" %

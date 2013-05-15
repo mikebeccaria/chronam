@@ -2905,7 +2905,14 @@
       "region": "Africa", 
       "name": "Zambia"
     }
-  }, 
+  },
+  { "pk": "nnyln",
+    "model": "core.Awardee", 
+    "fields": {
+      "name": "Northern New York Library Network", 
+      "created": "2012-10-17 10:14:00"
+    }
+  },
   {
     "pk": "rh", 
     "model": "core.country", 

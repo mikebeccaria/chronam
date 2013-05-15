@@ -32,6 +32,25 @@ def issues(request, lccn, year=None):
     title = get_object_or_404(models.Title, lccn=lccn)
     issues = title.issues.all()
 
+    #determine whether issue is annual, monthly or daily and display calendar or list appropriately
+    days = []
+    months = []
+    years = []
+    for issue in issues:
+        tmpyear, tmpmonth, tmpday = str(issue.date_issued).split('-')
+        days.append(tmpday)
+        months.append(tmpmonth)
+        years.append(tmpyear)
+        
+    date_frequency = "yearly"
+    for month in months:
+        if month != "01":
+            date_frequency = "monthly"
+    for day in days:
+        if day != "01":
+            date_frequency = "daily"
+
+
     if issues.count() > 0:
         if year is None:
             _year = issues[0].date_issued.year
@@ -39,6 +58,22 @@ def issues(request, lccn, year=None):
             _year = int(year)
     else:
         _year = 1900  # no issues available
+    
+    #year_view = HTMLCalendar(firstweekday=6, issues=issues).formatyear(_year)
+    #print year_view
+    
+    if date_frequency == "daily":
+        
+        cal_view = HTMLCalendar(firstweekday=6, issues=issues).formatyear(_year)
+        dates = issues.dates('date_issued', 'year')
+    
+    if date_frequency == "monthly":
+        
+        cal_view = get_month_list(issues, lccn)
+
+    if date_frequency == "yearly":
+        cal_view = get_year_list(issues, lccn)
+
     year_view = HTMLCalendar(firstweekday=6, issues=issues).formatyear(_year)
     dates = issues.dates('date_issued', 'year')
 

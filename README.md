@@ -49,8 +49,7 @@ install some application specific dependencies, and configure the application.
 First you will need to set up the local Python environment and install some
 Python dependencies:
 
-    cd /opt/chronam/
-    virtualenv ENV
+    virtualenv --no-site-packages ${CHRONAM_HOME}/ENV
     source /opt/chronam/ENV/bin/activate
     cp conf/chronam.pth ENV/lib/python2.7/site-packages/chronam.pth
     pip install -U distribute

@@ -154,6 +154,107 @@ class HTMLCalendar(calendar.Calendar):
         a('</table>')
         return ''.join(v)
 
+
+def get_month_list(issues,lccn):
+    
+    title = get_object_or_404(models.Title, lccn=lccn)
+    issues_obj = title.issues.all()
+    
+    dates = set()
+    for issue in issues:
+        dates.add(issue.date_issued.year)
+    dates = sorted(dates)
+    
+    
+    
+    
+    v = []
+    a = v.append
+    
+    print dates
+    for year in dates:
+        a('<table class="date_table" style="border: 0;">')
+        a('<tr >')
+        a('<td colspan="12" style="text-align: center; font-size:large;">%s</td>' % (year))
+        a('</tr>')
+        a('<tr>')
+        for month in range(1,13):
+            day = 1
+            r = issues_obj.filter(date_issued=datetime.date(int(year), int(month), int(day)))
+            issues = set()
+            for issue in r:
+                    issues.add((issue.title.lccn,
+                                issue.date_issued, issue.edition))
+            issues = sorted(list(issues))
+            count = len(issues)
+        
+            if count == 1:
+                lccn, date_issued, edition = issues[0]
+                kw = dict(lccn=lccn, date=date_issued, edition=edition)
+                url = urlresolvers.reverse('chronam_issue_pages', kwargs=kw)
+            elif count > 1:
+                for lccn, date_issued, edition in issues:
+                    kw = dict(lccn=lccn, date=date_issued, edition=edition)
+                    url = urlresolvers.reverse('chronam_issue_pages',kwargs=kw)
+            else:
+                url = None
+            
+            if url == None:
+                a('<td style="border: 1px solid gray;border-top:0;border-bottom: 0; border-collapse:collapse;padding: 3px; width: 50px; text-align: center;">%s</td>' % (calendar.month_abbr[int(month)]))
+            else:
+                a('<td style="border: 1px solid gray;border-top:0;border-bottom: 0; border-collapse:collapse;padding: 3px; width: 50px; text-align: center;"><a href="%s">%s</a></td>' % (url,calendar.month_abbr[int(month)]))
+        a('</tr>')
+        a('</table>')
+    return ''.join(v)
+
+def get_year_list(issues,lccn):
+    title = get_object_or_404(models.Title, lccn=lccn)
+    issues_obj = title.issues.all()
+    
+    dates = []
+    for issue in issues:
+        dates.append(issue.date_issued.year)
+    dates.sort()
+    
+    
+    
+    
+    v = []
+    a = v.append
+    
+    
+    a('<table>')
+            
+    print dates
+    
+    for issue in issues:
+        year, month, day = str(issue.date_issued).split('-')
+        r = issues_obj.filter(date_issued=datetime.date(int(year), int(month), int(day)))
+        issues = set()
+        for issue in r:
+            issues.add((issue.title.lccn,
+                        issue.date_issued, issue.edition))
+        issues = sorted(list(issues))
+        count = len(issues)
+        if count == 1:
+            lccn, date_issued, edition = issues[0]
+            kw = dict(lccn=lccn, date=date_issued, edition=edition)
+            url = urlresolvers.reverse('chronam_issue_pages', kwargs=kw)
+        elif count > 1:
+            for lccn, date_issued, edition in issues:
+                kw = dict(lccn=lccn, date=date_issued, edition=edition)
+                url = urlresolvers.reverse('chronam_issue_pages',kwargs=kw)  
+        a('<tr>')
+        a('<td><a href="%s">%s</a></td>' % (url,year))    
+        a('</tr>')
+    a('</table>')
+    return ''.join(v)
+
+
+
+
+
+
 def get_page(lccn, date, edition, sequence):
     """a helper function to lookup a particular page based on metadata
     cooked into the chronam URLs, and raise a 404 appropriately when

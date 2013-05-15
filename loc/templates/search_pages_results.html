@@ -123,6 +123,7 @@ if ($.browser.msie && $.browser.version < 7) {
             <select class="sel" name="sort_select" id="sort_select">
                 <option value="relevance">Relevance</option>
                 <option value="state">State</option>
+                <option value="county">County</option>
                 <option value="title">Title</option>
                 <option value="date">Date</option>
             </select> &nbsp;  &nbsp; 
@@ -150,7 +151,16 @@ if ($.browser.msie && $.browser.version < 7) {
                     </a><br />
 		    {% with object.issue.title as title %}
                     <a href="{{ object.highlight_url }}">{{title.display_name}} ({{title.place_of_publication}}), {{object.issue|label}}, {{object|label}}</a>
-		    {% endwith %}
+		    
+                    <br />
+                    <font color="gray">
+                    {% for sentence in object.highlights %}
+                    {{ sentence|safe}}...
+                    {% endfor %}
+                    </font>
+
+                    
+                    {% endwith %}
 
                     {% comment %}The following two hidden input fields are used by the add_highlights javascript{% endcomment %}
                     <input name="id" value="{{object.url}}" type="hidden"/>
