@@ -111,9 +111,9 @@ class BatchLoader(object):
         
         metadata_standard = settings.METADATA_STANDARD
         
-        getattr(self, "_load_batch_%s" % (metadata_standard))(batch_location)
+        getattr(self, "_load_batch_%s" % (metadata_standard))(batch_path)
         
-    def _load_batch_loc(self, batch_location, strict=True):
+    def _load_batch_loc(self, batch_path, strict=True):
         self.pages_processed = 0
 
         logging.info("loading batch at %s", batch_path)
@@ -209,7 +209,7 @@ class BatchLoader(object):
         return batch
 
 
-    def _load_batch_nnyln(self, batch_location, strict=True):
+    def _load_batch_nnyln(self, batch_path, strict=True):
         self.pages_processed = 0
 
         logging.info("loading batch at %s", batch_path)
@@ -393,64 +393,63 @@ class BatchLoader(object):
         return issue
     
     def _load_issue_nnyln(self, metadata_file):
-        _logger.debug("parsing issue mets file: %s" % metadata_file)
-        doc = etree.parse(metadata_file)
+		_logger.debug("parsing issue mets file: %s" % metadata_file)
+		doc = etree.parse(metadata_file)
 
         # get the mods for the issue
         #div = doc.xpath('.//mets:div[@TYPE="np:issue"]', namespaces=ns)[0]
         #dmdid = div.attrib['DMDID']
         #mods = dmd_mods(doc, dmdid)
 
-        div = doc.xpath('//pages')[0]
-
+		div = doc.xpath('//pages')[0]
         # set up a new Issue
-        issue = Issue()
+		issue = Issue()
         #issue.volume = mods.xpath(
         #    'string(.//mods:detail[@type="volume"]/mods:number[1])', 
         #    namespaces=ns).strip()
-        issue.volume = div.attrib['volume']
+		issue.volume = div.attrib['volume']
 
         
         #issue.number = mods.xpath(
         #    'string(.//mods:detail[@type="issue"]/mods:number[1])', 
         #    namespaces=ns).strip()
         
-        issue.number = div.attrib['issue']
+		issue.number = div.attrib['issue']
         
         #issue.edition = int(mods.xpath( 
         #        'string(.//mods:detail[@type="edition"]/mods:number[1])', 
         #        namespaces=ns))
         
-        issue.edition = div.attrib['edition']
+		issue.edition = div.attrib['edition']
         
         #issue.edition_label = mods.xpath( 
         #        'string(.//mods:detail[@type="edition"]/mods:caption[1])', 
         #        namespaces=ns).strip()
 
-        issue.edition_label = div.attrib['edition_label']
+		issue.edition_label = div.attrib['edition_label']
 
         # parse issue date
         #date_issued = mods.xpath('string(.//mods:dateIssued)', namespaces=ns)
-        date_issued = div.attrib['issueDate']
-        issue.date_issued = datetime.strptime(date_issued, '%Y-%m-%d')
+		date_issued = div.attrib['issueDate']
+		issue.date_issued = datetime.strptime(date_issued, '%Y-%m-%d')
 
         # attach the Issue to the appropriate Title
         #lccn = mods.xpath('string(.//mods:identifier[@type="lccn"])', 
         #    namespaces=ns).strip()
         
-        lccn = div.attrib['lccn']
+		lccn = div.attrib['lccn']
 
         
-        try:
-            title = Title.objects.get(lccn=lccn)
-        except Exception, e:
-            management.call_command('load_titles', 'http://chroniclingamerica.loc.gov/lccn/%s/marc.xml' % lccn)
-            title = Title.objects.get(lccn=lccn)
-        issue.title = title
+		try:
+			title = Title.objects.get(lccn=lccn)
+		except Exception, e:
+			management.call_command('load_titles', 'http://chroniclingamerica.loc.gov/lccn/%s/marc.xml' % lccn)
+			title = Title.objects.get(lccn=lccn)
+		issue.title = title
 
-        issue.batch = self.current_batch
-        issue.save()
-        _logger.debug("saved issue: %s" % issue.url)
+		issue.batch = self.current_batch
+		issue.save()
+		_logger.debug("saved issue: %s" % issue.url)
 
         #notes = [] 
         #for mods_note in mods.xpath('.//mods:note', namespaces=ns): 
@@ -463,15 +462,14 @@ class BatchLoader(object):
         #issue.save()
 
         # attach pages: lots of logging because it's expensive
-        for page_div in div.xpath('.//mets:div[@TYPE="np:page"]', 
-                                  namespaces=ns):
-            try:
-                page = self._load_page(doc, page_div, issue)
-                self.pages_processed += 1
-            except BatchLoaderException, e:
-                _logger.exception(e)
+		for page_div in div.xpath('//page'):
+			try:
+				page = self._load_page_nnyln(doc, page_div, issue)
+				self.pages_processed += 1
+			except BatchLoaderException, e:
+				_logger.exception(e)
 
-        return issue
+		return issue
 
     def _load_page(self, doc, div, issue):
         dmdid = div.attrib['DMDID']
