@@ -42,7 +42,8 @@ class OCRHandler(ContentHandler):
             self._language = attrs.get('language', 'eng')
 
     def endElement(self, tag):
-        if tag == 'TextLine':
+        #if tag == 'TextLine': #altered for nnyln
+        if tag == 'String':		
             l = ' '.join(self._line)
             self._line = []
             if self._language in self._page:
