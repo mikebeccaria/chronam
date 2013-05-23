@@ -23,7 +23,7 @@ from chronam.core.rdf import title_to_graph, issue_to_graph, page_to_graph
 
 from chronam.core.utils.utils import HTMLCalendar, _get_tip, _stream_file, \
                                      _page_range_short, _rdf_base, get_page, \
-                                     label, create_crumbs
+                                     label, create_crumbs, get_month_list, get_year_list
 from chronam.core.decorator import cache_page, rdf_view
 
 

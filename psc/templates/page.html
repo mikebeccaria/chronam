@@ -1,0 +1,173 @@
+{% extends "site_base.html" %}
+{% load static from staticfiles %}
+
+{% block head_content %}{{ block.super }}
+    {% with page as title_metadata %}
+    {% include "includes/lc_metadata.html" %}
+    {% endwith %}
+    <link rel="primaryTopic" href="{{ page.abstract_url }}" />
+    <link rel="resourcemap" type="application/rdf+xml" href="{% url chronam_page_dot_rdf page.issue.title.lccn, page.issue.date_issued, page.issue.edition, page.sequence %}" />
+    <link rel="alternate" type="application/json" href="{% url chronam_page_dot_json page.issue.title.lccn, page.issue.date_issued, page.issue.edition, page.sequence %}" />
+    <link rel="alternate" type="image/jp2" href="{% url chronam_page_jp2 title.lccn, issue.date_issued, issue.edition, page.sequence %}" />
+    <link rel="alternate" type="application/pdf" href="{% url chronam_page_pdf title.lccn, issue.date_issued, issue.edition, page.sequence %}" />
+    <link rel="alternate" type="application/xml" href="{% url chronam_page_ocr_xml title.lccn, issue.date_issued, issue.edition, page.sequence %}" />
+    <link rel="alternate" type="text/plain" href="{% url chronam_page_ocr_txt title.lccn, issue.date_issued, issue.edition, page.sequence %}" />
+    <link rel="canonical" href="http://{{host}}{% url chronam_page title.lccn, issue.date_issued, issue.edition, page.sequence %}" />
+    <link rel="up" href="{{ issue.url }}" />
+    <link rel="up" href="{{ issue.batch.url }}" />
+    {% if page.reel.number %}<link rel="up" href="{% url chronam_reel page.reel.number %}" />{% endif %}
+    {% if page.on_flickr %}{% for flickr_url in page.flickr_urls.all %}<link rel="alternate" type="text/html" href="{{ flickr_url.value }}" />{% endfor %}{% endif %}
+    <meta property="og:image" content="http://{{ host }}{% url chronam_page_thumbnail title.lccn,page.issue.date_issued,page.issue.edition,page.sequence %}" />
+    <meta property="og:title" content="{{ page_title }}" />
+    <meta property="og:description" content="{{ page_title }}, brought to you by {{ image_credit }}, and the National Digital Newspaper Program." />
+
+    <style type="text/css">
+#viewer_container_container {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+}
+#dummy { /* for specifying aspect ratio of viewer_container */
+    padding-top:{% widthratio page.jp2_length page.jp2_width 40 %}%;
+}
+#viewer_container {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0px;
+    padding: 0px;
+    background-color: black;
+    border: 1px solid black;
+    color: white;   /* for error messages, etc. */
+}
+.overlay
+{
+    border: 1px solid red;
+    opacity: 0.4;      
+    -moz-opacity: 0.4;
+    -webkit-opacity: 0.4;
+    background: red;
+}
+.pagetools a.disabled,
+.pagetools a.disabled:hover {
+    color: #999999;
+}
+
+.toolbar
+{
+    float: left;
+    height:     33px;
+    border:     none;
+    color:      #333;
+    padding:    0px;
+    background-color: transparent;
+    z-index:    999999;
+}
+
+.toolbar.fullpage
+{
+    height: 0px;
+}
+    </style>
+
+{% endblock head_content %}
+
+
+{% block content %}
+    <div>
+      <div class="row">
+	<div class="span9">
+	  <ul class="pagetools inline">
+	    <li>
+	      <a rel="previous"{% if page.previous %} href="{% url chronam_page title.lccn,issue.date_issued,issue.edition,page.previous.sequence %}"{% else %} class="disabled"{% endif %}>
+                  <i class="icon-chevron-left"></i>
+                  <span class="visible-desktop">prev</span>
+	      </a> 
+              Page
+	      <a rel="next"{% if page.next %} href="{% url chronam_page title.lccn,issue.date_issued,issue.edition,page.next.sequence %}"{% else %} class="disabled"{% endif %}>
+                  <span class="visible-desktop">next</span>
+                  <i class="icon-chevron-right"></i>
+	      </a>
+	    </li>
+	    <li>
+	      <a rel="previous"{% if previous_issue_first_page %} href="{% url chronam_page title.lccn,previous_issue_first_page.issue.date_issued,previous_issue_first_page.issue.edition,previous_issue_first_page.sequence %}"{% else %} class="disabled"{% endif %}>
+                  <i class="icon-chevron-left"></i>
+                  <span class="visible-desktop">prev</span>
+	      </a>
+	      Issue
+	      <a rel="next"{% if next_issue_first_page %} href="{% url chronam_page title.lccn,next_issue_first_page.issue.date_issued,next_issue_first_page.issue.edition,next_issue_first_page.sequence %}"{% else %} class="disabled"{% endif %}>
+                <span class="visible-desktop">next</span>
+                <i class="icon-chevron-right"></i>
+	      </a>
+	    </li>
+	    <li>
+	      <a href="{% url chronam_page_ocr title.lccn,issue.date_issued,issue.edition,page.sequence %}">
+                  <span class="visible-desktop">Text</span>
+                  <i class="icon-font"></i>
+	      </a>
+	    </li>
+	    <li>
+	      <a href="{% url chronam_page_pdf title.lccn, issue.date_issued, issue.edition, page.sequence %}">
+                  <span class="visible-desktop">PDF</span>
+                  <i class="icon-file"></i>
+	      </a>
+	    </li>
+	    <li>
+	      <a href="{% url chronam_page_jp2 title.lccn, issue.date_issued, issue.edition, page.sequence %}">
+                  <span class="visible-desktop">JP2 ({{image_size}})</span>
+                  <i class="icon-picture"></i>
+	      </a>
+	    </li>
+	    <li>
+	      <a id="clip" href="#" target="print">
+                  <span class="visible-desktop">Clip Image</span>
+                  <i class="icon-camera"></i>
+	      </a>
+	    </li>
+          </ul>
+	</div>
+      </div>
+      {% if page.jp2_filename %}
+      
+      <div id="viewer_container_container">
+	<div id="dummy"></div>
+	<div id="viewer_container" class="openseadragon span12">
+	  <div id="item-ctrl" class="toolbar span3"></div>
+	</div>
+      </div>
+
+
+      {% else %}
+      <div class="missing">
+        <h3>Missing Page: {{explanation}}</h3>
+      </div>
+      {% endif %}
+    </div>
+      
+{% endblock content %}
+
+
+{% block javascript %}
+{{ block.super }}
+    <script src="{% static 'js/openseadragon.min.js' %}"></script>
+    <script src="{% static 'js/jquery.ba-bbq.min.js' %}"></script> 
+
+    <div id="page_data"
+	 data-static_url="{% static '' %}images/",
+	 data-width="{{page.jp2_width}}"
+	 data-height="{{page.jp2_length}}"
+	 data-page_url="{% url chronam_page title.lccn,issue.date_issued,issue.edition,page.sequence %}"
+	 data-tile_url="/images/tiles/{{issue.batch.name}}/data/{{page.jp2_filename}}/"
+	 data-coordinates_url="{% url chronam_page_coordinates page.issue.title.lccn,page.issue.date_issued,page.issue.edition,page.sequence %}"
+	 data-navigation_url="{% url chronam_search_pages_navigation %}?"
+	 ></div>
+
+    <script src="{% static 'js/page.js' %}"></script>
+
+    <noscript><!-- without javascript the pageviewer does not work; display OCR in this case instead. -->
+        <h3>Newspaper Page Text</h3>
+        <pre>{{ page.ocr.text }}</pre>
+    </noscript>
+{% endblock %}
