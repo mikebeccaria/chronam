@@ -122,7 +122,7 @@ SOLR_LANGUAGES = ("eng", "fre", "spa")
 
 DOCUMENT_ROOT = "/opt/chronam/static"
 
-STORAGE = '/opt/chronam/data/'
+STORAGE = '/data/'
 STORAGE_URL = '/data/'
 BATCH_STORAGE = os.path.join(STORAGE, "batches")
 BIB_STORAGE = os.path.join(STORAGE, "bib")

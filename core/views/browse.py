@@ -582,7 +582,7 @@ def page_print(request, lccn, date, edition, sequence,
 
 
 @cache_page(settings.DEFAULT_TTL_SECONDS)
-def issues_first_pages(request, lccn=settings.DEFAULT_TITLE_FRONTPAGE_LCCN, page_number=1):
+def issues_first_pages(request, lccn, page_number=1):
     
     title = get_object_or_404(models.Title, lccn=lccn)
     issues = title.issues.all()
