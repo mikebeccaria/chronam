@@ -106,7 +106,8 @@ def search_pages_results(request, view_type='gallery'):
     lccns = query.getlist('lccn')
     states = query.getlist('state')
     counties = query.getlist('county')
-    
+    counties = query.getlist('town')
+
     # figure out the sort that's in use
     sort = query.get('sort', 'relevance')
     if view_type == "list":

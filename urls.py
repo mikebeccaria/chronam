@@ -77,10 +77,16 @@ urlpatterns += patterns(
 
     # TODO: url(r'^.*[A-Z]+.*$', 'lowercase', name="chronam_lowercase"),
 
+    url(r'^about/ocr/$', 'about_ocr', name="chronam_about_ocr"),
+    
     url(r'^about/$', 'about', name="chronam_about"),
 
     url(r'^help/$', 'help', name="chronam_help"),
 
+    url(r'^contact/$', 'contact', name="chronam_contact"),
+    
+    url(r'^faq/$', 'faq', name="chronam_faq"),
+    
     # explainOCR.html
     url(r'^ocr/$', 'ocr', name="chronam_ocr"),
 
@@ -155,8 +161,8 @@ urlpatterns += patterns(
         'page_pdf', name="chronam_page_pdf"),
 
     # example: /lccn/sn85066387/1907-03-17/ed-1/seq-4.jp2
-    url(r'^lccn/(?P<lccn>\w+)/(?P<date>\d{4}-\d{2}-\d{2})/ed-(?P<edition>\d+)/seq-(?P<sequence>\d+).jp2$',
-        'page_jp2', name="chronam_page_jp2"),
+    url(r'^lccn/(?P<lccn>\w+)/(?P<date>\d{4}-\d{2}-\d{2})/ed-(?P<edition>\d+)/seq-(?P<sequence>\d+).png$',
+        'page_png', name="chronam_page_png"),
 
     # example: /lccn/sn85066387/1907-03-17/ed-1/seq-4/ocr.xml
     url(r'^lccn/(?P<lccn>\w+)/(?P<date>\d{4}-\d{2}-\d{2})/ed-(?P<edition>\d+)/seq-(?P<sequence>\d+)/ocr.xml$',

@@ -1,9 +1,9 @@
 [
   {
-    "pk": "curiv", 
+    "pk": "nnyln", 
     "model": "core.awardee", 
     "fields": {
-      "name": "University of California, Riverside", 
+      "name": "Northern NY Library Network", 
       "created": "2009-02-09 06:44:45"
     }
   }

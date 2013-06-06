@@ -612,7 +612,7 @@ class Page(models.Model):
             "issue": {
                 "date_issued": strftime(self.issue.date_issued, "%Y-%m-%d"),
                 "url": "http://" + host + self.issue.json_url},
-            "jp2": "http://" + host + self.jp2_url,
+            "png": "http://" + host + self.png_url,
             "ocr": "http://" + host + self.ocr_url,
             "text": "http://" + host + self.txt_url,
             "pdf": "http://" + host + self.pdf_url,
@@ -686,8 +686,8 @@ class Page(models.Model):
 
     @property
     @permalink
-    def jp2_url(self):
-        return ('chronam_page_jp2', (), self._url_parts())
+    def png_url(self):
+        return ('chronam_page_png', (), self._url_parts())
 
     @property
     @permalink

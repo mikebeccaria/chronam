@@ -6,7 +6,7 @@ from django.template import RequestContext
 
 @cache_page(settings.DEFAULT_TTL_SECONDS)
 def about(request):
-    page_title = "About Chronicling America"
+    page_title = "About NY State Historic Newspapers"
     crumbs = list(settings.BASE_CRUMBS)
     crumbs.extend([
         {'label':'About',
@@ -16,6 +16,18 @@ def about(request):
     return render_to_response('about.html', dictionary=locals(),
                               context_instance=RequestContext(request))
 
+@cache_page(settings.DEFAULT_TTL_SECONDS)
+def faq(request):
+    page_title = "Frequently Asked Questions"
+    crumbs = list(settings.BASE_CRUMBS)
+    crumbs.extend([
+        {'label':'About',
+         'href': urlresolvers.reverse('chronam_about'),
+         'active': True},
+    ])
+    return render_to_response('about.html', dictionary=locals(),
+                              context_instance=RequestContext(request))
+                              
 @cache_page(settings.DEFAULT_TTL_SECONDS)
 def about_api(request):
     page_title = "About the Site and API"
@@ -28,6 +40,26 @@ def about_api(request):
     return render_to_response('about_api.html', dictionary=locals(),
                               context_instance=RequestContext(request))
 
+@cache_page(settings.DEFAULT_TTL_SECONDS)
+def about_ocr(request):
+    page_title = "What is OCR"
+    crumbs = list(settings.BASE_CRUMBS)
+    crumbs.extend([
+        {'label':'About OCR',
+         'href': urlresolvers.reverse('chronam_about_ocr'),
+         'active': True},
+    ])
+    return render_to_response('about_ocr.html', dictionary=locals(),
+                              context_instance=RequestContext(request))                              
+                              
+                              
+                              
+@cache_page(settings.DEFAULT_TTL_SECONDS)
+def contact(request):
+    page_title = "Contact"
+    return render_to_response('contact.html', dictionary=locals(),
+                              context_instance=RequestContext(request))
+                              
 @cache_page(settings.DEFAULT_TTL_SECONDS)
 def help(request):
     page_title = "Help"

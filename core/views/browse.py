@@ -23,7 +23,7 @@ from chronam.core.rdf import title_to_graph, issue_to_graph, page_to_graph
 
 from chronam.core.utils.utils import HTMLCalendar, _get_tip, _stream_file, \
                                      _page_range_short, _rdf_base, get_page, \
-                                     label, create_crumbs, get_month_list, get_year_list
+                                     label, create_crumbs, get_month_list, get_year_list,get_all_dates_list
 from chronam.core.decorator import cache_page, rdf_view
 
 
@@ -61,6 +61,16 @@ def issues(request, lccn, year=None):
     
     #year_view = HTMLCalendar(firstweekday=6, issues=issues).formatyear(_year)
     #print year_view
+    #print settings.BROWSE_VIEW
+    if settings.BROWSE_VIEW == "list":
+        date_frequency = "list"
+        #print "test"
+    
+    #print "date " + date_frequency
+    
+    if date_frequency == "list":
+        cal_view = get_all_dates_list(issues, lccn)
+        
     
     if date_frequency == "daily":
         
@@ -74,13 +84,15 @@ def issues(request, lccn, year=None):
     if date_frequency == "yearly":
         cal_view = get_year_list(issues, lccn)
 
-    year_view = HTMLCalendar(firstweekday=6, issues=issues).formatyear(_year)
-    dates = issues.dates('date_issued', 'year')
-
+    #year_view = HTMLCalendar(firstweekday=6, issues=issues).formatyear(_year)
+    #dates = issues.dates('date_issued', 'year')
+    year_view = cal_view
+    
     class SelectYearForm(django_forms.Form):
         year = fields.ChoiceField(choices=((d.year, d.year) for d in dates),
                               initial=_year)
     select_year_form = SelectYearForm()
+    
     page_title = "Browse Issues: %s" % title.display_name
     page_name = "issues"
     crumbs = create_crumbs(title)
@@ -289,7 +301,6 @@ def page(request, lccn, date, edition, sequence, words=None):
     image_credit = issue.batch.awardee.name
     host = request.get_host()
     profile_uri = 'http://www.openarchives.org/ore/html/'
-
     template = "page.html"
     response = render_to_response(template, dictionary=locals(),
                                   context_instance=RequestContext(request))
@@ -518,14 +529,15 @@ def page_pdf(request, lccn, date, edition, sequence):
     return _stream_file(page.pdf_abs_filename, 'application/pdf')
 
 
-def page_jp2(request, lccn, date, edition, sequence):
+def page_png(request, lccn, date, edition, sequence):
     title, issue, page = _get_tip(lccn, date, edition, sequence)
-    return _stream_file(page.jp2_abs_filename, 'image/jp2')
+    return _stream_file(page.jp2_abs_filename, 'image/png')
 
 
 def page_ocr_xml(request, lccn, date, edition, sequence):
     title, issue, page = _get_tip(lccn, date, edition, sequence)
     return _stream_file(page.ocr_abs_filename, 'application/xml')
+
 
 
 def page_ocr_txt(request, lccn, date, edition, sequence):
@@ -570,7 +582,8 @@ def page_print(request, lccn, date, edition, sequence,
 
 
 @cache_page(settings.DEFAULT_TTL_SECONDS)
-def issues_first_pages(request, lccn, page_number=1):
+def issues_first_pages(request, lccn=settings.DEFAULT_TITLE_FRONTPAGE_LCCN, page_number=1):
+    
     title = get_object_or_404(models.Title, lccn=lccn)
     issues = title.issues.all()
     if not issues.count() > 0:

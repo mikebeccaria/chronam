@@ -72,6 +72,7 @@ class Command(BaseCommand):
                                 skip_essays=options['skip_essays'],
                                 pull_title_updates=options['pull_title_updates'])
 
+        
 
         end = datetime.now()
         total_time = end - start

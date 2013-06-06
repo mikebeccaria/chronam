@@ -15,8 +15,6 @@ TEMPLATE_DEBUG = DEBUG
 ADMINS = (
 )
 
-METADATA_STANDARD = "nnyln"
-
 MANAGERS = ADMINS
 
 TIME_ZONE = 'America/New_York'

@@ -154,7 +154,6 @@ class HTMLCalendar(calendar.Calendar):
         a('</table>')
         return ''.join(v)
 
-
 def get_month_list(issues,lccn):
     
     title = get_object_or_404(models.Title, lccn=lccn)
@@ -171,7 +170,7 @@ def get_month_list(issues,lccn):
     v = []
     a = v.append
     
-    print dates
+    #print dates
     for year in dates:
         a('<table class="date_table" style="border: 0;">')
         a('<tr >')
@@ -225,7 +224,7 @@ def get_year_list(issues,lccn):
     
     a('<table>')
             
-    print dates
+    #print dates
     
     for issue in issues:
         year, month, day = str(issue.date_issued).split('-')
@@ -250,10 +249,49 @@ def get_year_list(issues,lccn):
     a('</table>')
     return ''.join(v)
 
-
-
-
-
+def get_all_dates_list(issues,lccn):
+    title = get_object_or_404(models.Title, lccn=lccn)
+    issues_obj = title.issues.all()
+    
+    dates = []
+    for issue in issues:
+        dates.append(issue.date_issued)
+    dates.sort()
+    
+    
+    
+    
+    v = []
+    a = v.append
+    
+    
+    a('<table>')
+            
+    #print dates
+    
+    for issue in issues:
+        year, month, day = str(issue.date_issued).split('-')
+        r = issues_obj.filter(date_issued=datetime.date(int(year), int(month), int(day)))
+        issues = set()
+        for issue in r:
+            issues.add((issue.title.lccn,
+                        issue.date_issued, issue.edition))
+        issues = sorted(list(issues))
+        count = len(issues)
+        if count == 1:
+            lccn, date_issued, edition = issues[0]
+            kw = dict(lccn=lccn, date=date_issued, edition=edition)
+            url = urlresolvers.reverse('chronam_issue_pages', kwargs=kw)
+        elif count > 1:
+            for lccn, date_issued, edition in issues:
+                kw = dict(lccn=lccn, date=date_issued, edition=edition)
+                url = urlresolvers.reverse('chronam_issue_pages',kwargs=kw)  
+        a('<tr>')
+        a('<td><a href="%s">%s/%s/%s</a></td>' % (url,month, day, year))    
+        a('</tr>')
+    a('</table>')
+    return ''.join(v)
+    
 
 def get_page(lccn, date, edition, sequence):
     """a helper function to lookup a particular page based on metadata

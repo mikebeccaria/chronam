@@ -49,7 +49,33 @@
 
 </div>
 
+<div class="row">
+    <div class="span6">
+      <div class="pagination pagination-small">
+	<ul>
+	  <li><a {% if page.has_previous %}{% else %}class="disabled"{% endif %} href="{{previous_url}}" class="prev">prev</a></li>
+     
+	  {% for page_number in page_range_short %}
 
+	  {% ifequal page_number "..." %}
+	  <li><span>...</span></li>
+	  {% else %}
+
+	  {% ifequal page_number page.number %}
+	  <li class="disabled"><span>{{page_number}}</span></li>
+	  {% else %}
+	  <li><a href="?{{q}}&amp;page={{page_number}}&amp;sort={{sort}}">{{page_number}}</a></li>
+	  {% endifequal %}
+
+	  {% endifequal %}
+	  {% endfor %}
+            
+	  <li><a {% if page.has_next %}{% else %}class="disabled"{% endif %} href="{{ next_url }}" class="next">next</a></li>
+	</ul>
+      </div>
+    </div>
+
+  </div>  
 {% endblock %}
 
 

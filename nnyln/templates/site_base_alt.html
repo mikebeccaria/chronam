@@ -1,0 +1,46 @@
+{% extends "site_base.html" %}
+{% load static %}
+{% block left_bits %}
+  <div class="sidebar">
+
+
+		<div class="contribute">
+ <h3 class="list_title">Contribute</h3>
+                 <a href="http://news.nnyln.net/hnpdonation.html" alt="logo" title="Contribute"><img id="contribute_logo" src="{% static 'images/donation.jpg' %}" /></a></div>
+
+              <div class="email_updates">
+ <h3 class="list_title">Subscribe</h3>
+<a href="http://news.nnyln.net/subscribe.html"><img src="{% static 'images/at-sign.jpg' %}" /><br /></a>
+                        <a href="http://news.nnyln.net/subscribe.html">Subscribe to e-mail updates</a>
+                    </div>
+
+
+		<div class="moreresources">
+                      <h3 class="list_title">More resources</h3>
+                      <ul>
+                        <li><a href="http://nyheritage.org">New York Heritage</a></li>
+                        <li><a href="http://nyheritage.org/newspapers/">New York Heritage Digitized Newspapers</a></li>
+                        <li><a href="http://www.nysl.nysed.gov/nysnp/">New York State Newspaper Holdings (Microfilm)</a></li>
+                      </ul>
+              </div>
+              <div class="ny3rslogo">
+                    	<a href="http://www.ny3rs.org"><img src="{% static 'images/ny3rslogo.png' %}" alt="logo" title="ny3rs" /></a>
+              </div>
+
+</div>	<!-- end sidebar -->
+{% endblock %}
+
+{% block sub_page_head %}
+<div id="page_head" class="_col">
+<h1 class="oneline">
+    {{ page_title }}
+</h1>
+</div><!-- end id:page_head -->
+{% endblock %}
+
+{% block main_content %}
+  {% block content %}{% endblock %}
+{% endblock %}
+
+{% block non_main_content %}
+{% endblock %}
