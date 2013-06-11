@@ -322,6 +322,7 @@ def title_search(d):
     Pass in form data for a given title search, and get back
     a corresponding solr query.
     """
+    print "this is d" + str(d)
     q = ["+type:title"]
     if d.get('state'):
         q.append('+state:"%s"' % d['state'])
@@ -364,9 +365,13 @@ def page_search(d):
 
     if d.get('lccn', None):
         q.append(query_join(d.getlist('lccn'), 'lccn'))
-
+    if d.get('city', None):
+        q.append(query_join(d.getlist('city'), 'place_of_publication'))
+    if d.get('county', None):
+        q.append(query_join(d.getlist('county'), 'county'))
     if d.get('state', None):
         q.append(query_join(d.getlist('state'), 'state'))
+    
 
     date_filter_type = d.get('dateFilterType', None)
     if date_filter_type == 'year' and d.get('year', None):

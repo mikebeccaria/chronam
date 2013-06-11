@@ -39,7 +39,7 @@ def _titles_states():
         titles = [("", "All newspapers"),]
         countries = set()
         counties = set()
-        towns = set()
+        cities = set()
         for title in models.Title.objects.filter(has_issues=True).select_related():
             short_name = title.name.split(":")[0]  # remove subtitle
             title_name = "%s (%s)" % (short_name,
@@ -48,30 +48,30 @@ def _titles_states():
 
 
             countries.add(title.country)
-            towns.add(title.place_of_publication)
+            cities.add(title.place_of_publication)
             places =  models.Place.objects.filter(titles=title)
             for place in places:
                 counties.add(place.county)
         states = [("", "All states")]
         county_list = counties
         counties = [("", "All counties")]
-        towns_list = towns
-        towns = [("", "All Towns")]
+        cities_list = cities
+        cities = [("", "All Cities")]
        
         for country in countries:
             states.append((country.name, country.name))
         for county in county_list:
             counties.append((county,county))
-        for town in towns_list:
-            towns.append((town,town))
+        for city in cities_list:
+            cities.append((city,city))
         counties = sorted(counties)
         states = sorted(states)
-        towns = sorted(towns)
-        print towns
-        cache.set("titles_states", (titles, states, counties, towns))
+        cities = sorted(cities)
+        print cities
+        cache.set("titles_states", (titles, states, counties, cities))
     else:
-        titles, states, counties, towns = titles_states
-    return (titles, states, counties, towns)
+        titles, states, counties, cities = titles_states
+    return (titles, states, counties, cities)
 
 
 def _fulltext_range():
@@ -108,7 +108,7 @@ class SearchPagesForm(forms.Form):
     lccn = fields.ChoiceField(choices=[])
     state = fields.ChoiceField(choices=[])
     county = fields.ChoiceField(choices=[])
-    town = fields.ChoiceField(choices=[])
+    city = fields.ChoiceField(choices=[])
     date1 = fields.ChoiceField(choices=[])
     date2 = fields.ChoiceField(choices=[])
     ortext = fields.CharField(widget=forms.widgets.TextInput(attrs ={"style":"width: 250px;"}))
@@ -121,7 +121,7 @@ class SearchPagesForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super(SearchPagesForm, self).__init__(*args, **kwargs)
-        self.titles, self.states, self.counties, self.towns = _titles_states()
+        self.titles, self.states, self.counties, self.cities = _titles_states()
         
 
         fulltextStartYear, fulltextEndYear = _fulltext_range()
@@ -138,8 +138,8 @@ class SearchPagesForm(forms.Form):
         self.fields["state"].widget.attrs = {'alt': 'id_state', 'style':'width: 140px'}
         self.fields["county"].choices = self.counties
         self.fields["county"].widget.attrs = {'alt': 'id_county', 'style':'width: 140px'}
-        self.fields["town"].choices = self.towns
-        self.fields["town"].widget.attrs = {'alt': 'id_town', 'style':'width: 140px'}
+        self.fields["city"].choices = self.cities
+        self.fields["city"].widget.attrs = {'alt': 'id_city', 'style':'width: 140px'}
         self.fields["date1"].choices = self.years 
         self.fields["date1"].initial = fulltextStartYear
         self.fields["date1"].widget.attrs["class"] = "norm"
@@ -156,7 +156,7 @@ class AdvSearchPagesForm(SearchPagesForm):
     lccn = fields.MultipleChoiceField(choices=[])
     state = fields.MultipleChoiceField(choices=[])
     county = fields.MultipleChoiceField(choices=[])
-    town = fields.MultipleChoiceField(choices=[])
+    city = fields.MultipleChoiceField(choices=[])
     date1 = fields.CharField()
     date2 = fields.CharField()
     sequence = fields.CharField()
@@ -170,7 +170,7 @@ class AdvSearchPagesForm(SearchPagesForm):
     def __init__(self, *args, **kwargs):
         super(AdvSearchPagesForm, self).__init__(*args, **kwargs)
 
-        self.titles, self.states, self.counties, self.towns = _titles_states()
+        self.titles, self.states, self.counties, self.cities = _titles_states()
         
         fulltextStartYear, fulltextEndYear = _fulltext_range()
 
@@ -186,8 +186,8 @@ class AdvSearchPagesForm(SearchPagesForm):
         self.fields["county"].widget.attrs = {'alt': 'id_county', 'style':'width: 140px'}
         self.fields["state"].choices = self.states
         self.fields["state"].widget.attrs = {'id':'id_states','style':'width: 140px', 'size':'8'}
-        self.fields["town"].choices = self.towns
-        self.fields["town"].widget.attrs = {'alt': 'id_town', 'style':'width: 140px', 'size':'8'}
+        self.fields["city"].choices = self.cities
+        self.fields["city"].widget.attrs = {'alt': 'id_city', 'style':'width: 140px', 'size':'8'}
 
         self.fields["date1"].choices = self.years 
         self.fields["date1"].widget.attrs = {"class":"txt", "id":"id_datefrom", "style":"width:70px;", "max_length":10, }

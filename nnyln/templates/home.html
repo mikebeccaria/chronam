@@ -21,9 +21,14 @@ jQuery(function($){
         <a href='{% url chronam_search_pages_results %}?dateFilterType=range&date1={{date|date:"m/d/Y" }}&date2={{date|date:"m/d/Y"}}/'><strong>100 Years Ago This Week</strong>: {{ date|date:"F j, Y" }} ({{page_count|intcomma}} issues)</a>
     </div> 
     <ul id="mycarousel" class="jcarousel-skin-tango"> 
-    {% for result in results %}
-      <li><a href="{{ result.url }}"><img class="thumbnail" src="{{result.thumbnail_url}}" width="200" height="286" alt="" /></a><br /><span><a href="{{ result.url }}"><strong>{{ result.label }}</strong> ({{result.pages}}pp.)</a><br />{{result.place_of_publication}}</span></li> 
+    {% for page in pages %}
+    <li><a href="{{page.url}}"><img class="thumbnail" src="{{page.medium_url}}" alt="{{page.label}}" width="200" height="286"</a>
+    
+    <br /><span><a href="{{ page.url }}"><strong>{{ page.label }}</strong> ({{page.pages}}pp.)</a><br />{{page.place_of_publication}}</span>
+    
+    </li>
       {% endfor %}
+    
     </ul> 
   </div><!-- end carousel-body --> 
   <div class="clear"><!-- --></div> 

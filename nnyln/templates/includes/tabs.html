@@ -12,7 +12,7 @@
         <form action="{% url chronam_search_pages_results %}" method="get" name="fulltext" id="fulltext" class="search-pages">
             <div class="wrap-tabsearch">
                 <!-- state -->
-                {{ search_form.town}}
+                {{ search_form.city}}
                 <span class="plus">+</span>
                 <!-- county -->
                 {{ search_form.county}}
@@ -35,10 +35,10 @@
         <a href="#" id="id_close_tab_advanced_search">close</a>
         <form action="{% url chronam_search_pages_results %}" method="get" name="fulltext2" id="fulltext2" class="search_adv">
         <div class="wrapper-search">
-             <!-- town -->
+             <!-- city -->
             <div class="fl-wrap">
-                <label for="id_towns">Select Town(s):</label><br />
-                {{ adv_search_form.town }}
+                <label for="id_city">Select Cities:</label><br />
+                {{ adv_search_form.city }}
             </div>
             <!-- county -->
             <div class="fl-wrap">

@@ -19,6 +19,7 @@ from chronam.core.utils.utils import _page_range_short
 
 
 def search_pages_paginator(request):
+    
     # front page only
     try:
         sequence = int(request.REQUEST.get('sequence', '0'))
@@ -106,7 +107,7 @@ def search_pages_results(request, view_type='gallery'):
     lccns = query.getlist('lccn')
     states = query.getlist('state')
     counties = query.getlist('county')
-    counties = query.getlist('town')
+    towns = query.getlist('town')
 
     # figure out the sort that's in use
     sort = query.get('sort', 'relevance')

@@ -1,6 +1,7 @@
 import json
 import random
 import datetime
+from datetime import timedelta
 
 from django.conf import settings
 from django.http import Http404, HttpResponse
@@ -31,7 +32,9 @@ def _frontpages(request, date):
     # if there aren't any issues default to the first 20 which
     # is useful for testing the homepage when there are no issues
     # for a given date
-    issues = models.Issue.objects.filter(date_issued=date)
+    #issues = models.Issue.objects.filter(date_issued=date)
+    week_year_ago = date + timedelta(days=6)
+    issues = models.Issue.objects.filter(date_issued__range=[date, week_year_ago])
     if issues.count() == 0:
         issues = models.Issue.objects.all()[0:20]
 
@@ -53,6 +56,7 @@ def _frontpages(request, date):
             'medium_url': first_page.medium_url,
             'place_of_publication': issue.title.place_of_publication,
             'pages': issue.pages.count()})
+    print results
     return results
 
 
@@ -63,6 +67,8 @@ def frontpages(request, date):
     except ValueError, e:
         raise Http404
     results = _frontpages(request, date)
+    print "results"
+    print results
     return HttpResponse(json.dumps(results), mimetype="application/json")
 
 
