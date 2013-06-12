@@ -896,6 +896,8 @@ def _chart(times):
 def _normalize_batch_name(batch_name):
     batch_name = batch_name.rstrip('/')
     batch_name = os.path.basename(batch_name)
+    #if not re.match(r'batch_\w+_\w+_ver\d\d', batch_name):
+    #added the ability to have up to 3 digits for version
     if not re.match(r'batch_\w+_\w+_ver\d{0,3}$', batch_name):
         msg = 'unrecognized format for batch name %s' % batch_name
         _logger.error(msg)
