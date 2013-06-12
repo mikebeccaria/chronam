@@ -1,0 +1,63 @@
+cd /opt/chronam/
+virtualenv ENV
+source /opt/chronam/ENV/bin/activate
+export DJANGO_SETTINGS_MODULE=chronam.settings
+cd /data/batch
+
+
+
+django-admin.py load_batch /data/batch/batches/nnyln/batch_nnyln_affirmed_ver01
+django-admin.py load_batch /data/batch/batches/nnyln/batch_nnyln_affirmed_ver06
+django-admin.py load_batch /data/batch/batches/nnyln/batch_nnyln_affirmed_ver08
+
+django-admin.py load_batch /data/batch/batches/guilderland/batch_guilderland_affirmed_ver01
+
+django-admin.py load_batch /data/batch/batches/nnyln01/batch_nnyln01_affirmed_ver01
+django-admin.py load_batch /data/batch/batches/nnyln01/batch_nnyln01_affirmed_ver02
+
+django-admin.py load_batch /data/batch/batches/rrlc/batch_nnyln01_affirmed_ver01
+
+django-admin.py load_batch /data/batch/batches/wnylrc/batch_wnylrc_affirmed_ver01
+
+
+
+
+
+
+nnyln
+batch_nnyln_affirmed_ver01
+batch_nnyln_affirmed_ver06
+batch_nnyln_affirmed_ver08
+
+
+
+guilderland
+batch_guilderland_affirmed_ver01 
+
+nnyln01
+batch_nnyln01_affirmed_ver01
+batch_nnyln01_affirmed_ver02
+
+rrlc
+batch_rrlc_affirmed_ver01
+
+wnylrc
+batch_wnylrc_affirmed_ver01
+
++-------------+-----------------------------------------------------------------+---------------------+
+| org_code    | name                                                            | created             |
++-------------+-----------------------------------------------------------------+---------------------+
+
+| brewster    | Brewster Public Library                                         | 0000-00-00 00:00:00 |
+| guilderland | Guilderland Public Library                                      | 0000-00-00 00:00:00 |
+| nnyln       | Northern New York Library Network                               | 0000-00-00 00:00:00 |
+| nnyln01     | Northern New York Library Network                               | 0000-00-00 00:00:00 |
+| rrlc        | Rochester Regional Library Council                              | 2013-04-18 11:50:00 |
+| wnylrc      | Western New York Library Resources Council                      | 0000-00-00 00:00:00 |
+
++-------------+-----------------------------------------------------------------+---------------------+
+insert into core_awardee(org_code,name,created) values('brewster','Brewster Public Library','2013-06-07 00:00:00');
+insert into core_awardee(org_code,name,created) values('guilderland','Guilderland Public Library','2013-06-07 00:00:00');
+insert into core_awardee(org_code,name,created) values('nnyln01','Northern New York Library Network','2013-06-07 00:00:00');
+insert into core_awardee(org_code,name,created) values('rrlc','Rochester Regional Library Council','2013-06-07 00:00:00');
+insert into core_awardee(org_code,name,created) values('wnylrc','Western New York Library Resources Council','2013-06-07 00:00:00');

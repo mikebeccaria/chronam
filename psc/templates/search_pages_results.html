@@ -1,0 +1,151 @@
+{% extends "site_base.html" %} 
+{% load static from staticfiles %}
+{% load custom_filters %}
+
+
+{% block page_head_container %}{% endblock %}
+
+{% block content %}
+
+<style>
+    body {
+	padding-top: 41px;
+    }
+    @media (max-width: 979px) {
+	body {
+	    padding-top: 0px;
+	}
+	.navbar-fixed-top {
+	    margin-bottom: 0px;
+	}
+    }
+    .breadcrumb {
+        margin: 0 0 5px;
+    }
+    #myCarousel {
+        margin-top: 10px;
+    }
+
+    ul.newspaper_pages li.span4 {
+	height: 450px;
+    }
+    @media (min-width: 1200px) {
+	ul.newspaper_pages li.span4 {
+	    height: 575px;
+	}
+    }
+    @media (max-width: 979px) and (min-width: 768px) {
+	ul.newspaper_pages li.span4 {
+	    height: 350px;
+	}
+    }
+    @media (max-width: 767px) {
+	ul.newspaper_pages li.span4 {
+	    height: auto;
+	}
+    }
+
+    .highlight_words div {
+	margin-top: -3px;
+	padding-top: 3px;
+	margin-bottom: 3px;
+	padding-bottom: 3px;
+	margin-left: -1px;
+	padding-left: 1px;
+	margin-right: 1px;
+	padding-right: 1px;
+	border-width: 1px;
+	border-style: solid;
+	border-color: black;
+	background:transparent; /* fallback for browsers not supporting rgba */
+	background: rgba(255, 0, 0, 0.4);
+    }
+    </style>
+
+{% ifequal paginator.count 0 %}
+
+<p style="padding-top:50px; font-size:15px">
+    <span style="color:#900">0 Results</span> were found for the search
+    {% for part in english_search %}
+        <strong>&ldquo;{{ part }}&rdquo;</strong>
+        {% if not forloop.last %}<em>and</em>{% endif %}
+    {% endfor %}
+</p>
+{% else %}
+<div class="search_results_ctrl top fix-float">
+    {% include 'includes/results_ctrl.html' %}
+</div><!-- end class:search_results_ctrl --> 
+
+<div class="search_results_body {{ view_type }}">
+    <div class="results_nav">
+        <p class="term">{{ paginator.count }} results 
+        {% if english_search %}containing{% endif %} 
+        {% for part in english_search %}
+        <strong>&ldquo;{{ part }}&rdquo;</strong>
+        {% if not forloop.last %}<em>and</em>{% endif %}
+        {% endfor %}
+        </p> 
+        <form id="results">
+            <p>
+            <input class="check" name="check_front" id="check_front" value=1 type="checkbox" />
+            <label class="norm" for="check_front">Show only front pages</label> &nbsp;&nbsp; 
+            <label class="norm" for="sort_select">Sort by:</label> 
+            <select class="sel" name="sort_select" id="sort_select">
+                <option value="relevance">Relevance</option>
+                <option value="state">State</option>
+                <option value="title">Title</option>
+                <option value="date">Date</option>
+            </select> &nbsp;  &nbsp; 
+            <label class="norm" for="rpp_select">Results per page:</label> 
+            <select class="sel" name="rpp_select" id="rpp_select">
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+            </p>
+        </form>
+    </div>
+    {% block search_results_box %}
+    <table class="search_results" cellspacing="0" summary="">
+        <tr>
+            {% for object in page.object_list %}
+            <td>
+                <div class="highlite">
+                    <a href="{{ object.highlight_url }}" class="thumbnail" title="{% with object.issue.title as title %}{{title.display_name}} ({{title.place_of_publication}}), {{object.issue|label}}, {{object|label}}">
+                        <img src="{{ object.thumb_url }}" alt=""
+                             class="highlight_words"
+                             data-script_name="{{script_name}}"
+                             data-id="{{object.url}}"
+                             data-words="{{object.words|join:' '}}">
+                      </a>
+                    <br />
+                    
+                        <a href="{{ object.highlight_url }}">{{title.display_name}} ({{title.place_of_publication}}), {{object.issue|label}}, {{object|label}}</a>
+                    {% endwith %}
+                </div>
+            
+            </td>
+            {% if forloop.counter|divisibleby:4 and not forloop.last %}
+            </tr><tr>
+            {% endif %}        
+            {% endfor %}
+        </tr>
+    </table>
+    <div class="txt_wrapper">
+    	<p class="backtotop gallery"><a href="#skip_menu">Top</a></p>
+    </div>
+
+{% endblock %}
+</div><!-- end class:search_results_body -->
+
+<div class="search_results_ctrl bot fix-float">
+    {% include 'includes/results_ctrl.html' %}
+</div><!-- end class:search_results_ctrl -->
+{% endifequal %}
+{% endblock %}
+
+{% block javascript %}
+{{ block.super }}
+<script type="text/javascript" src="{% static 'js/search_results.js' %}"></script>
+
+    <script src="{% static 'js/highlight.js' %}"></script>
+{% endblock %}

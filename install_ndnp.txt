@@ -1,0 +1,56 @@
+sudo apt-get update
+
+sudo apt-get install python-dev python-virtualenv mysql-server libmysqlclient-dev apache2 libapache2-mod-wsgi solr-jetty openjdk-6-jdk libxml2-dev libxslt-dev libjpeg-dev git-core graphicsmagick
+
+sudo mkdir /opt/chronam
+
+sudo chown $USER:users /opt/chronam
+
+git clone https://github.com/mikebeccaria/chronam /opt/chronam
+
+sudo cp /opt/chronam/conf/schema.xml /etc/solr/conf/
+sudo cp /opt/chronam/conf/stopwords_* /etc/solr/conf/
+sudo cp /opt/chronam/conf/solrconfig-ubuntu.xml /etc/solr/conf/solrconfig.xml
+sudo cp /opt/chronam/conf/jetty /etc/default/jetty
+sudo service jetty start
+
+sudo a2enmod cache expires rewrite disk_cache
+sudo cp /opt/chronam/conf/chronam.conf /etc/apache2/sites-available/chronam
+sudo a2ensite chronam
+sudo install -o $USER -g users -d /opt/chronam/static
+sudo install -o $USER -g users -d /opt/chronam/.python-eggs
+sudo service apache2 reload
+
+cd /opt/chronam/
+virtualenv ENV
+source /opt/chronam/ENV/bin/activate
+cp conf/chronam.pth ENV/lib/python2.7/site-packages/chronam.pth
+pip install -U distribute
+pip install -r requirements.pip
+
+sudo mkdir /data/batches
+sudo mkdir /data/cache
+sudo mkdir /data/bib
+
+
+
+echo "DROP DATABASE IF EXISTS chronam; CREATE DATABASE chronam CHARACTER SET utf8; GRANT ALL ON chronam.* to 'chronam'@'localhost' identified by 'pick_one'; GRANT ALL ON chronam.* TO 'chronam'@'localhost' identified by 'pick_one';" | mysql -u root -p
+
+export DJANGO_SETTINGS_MODULE=chronam.settings
+
+django-admin.py syncdb --noinput --migrate
+django-admin.py chronam_sync
+
+django-admin.py collectstatic --noinput
+
+sudo chown $USER:users /data
+
+edit /etc/mysql/my.cnf 
+-change bind-address to 0.0.0.0
+-change storage to /data/
+
+GRANT ALL PRIVILEGES ON chronam.* TO 'mbeccaria'@'%' IDENTIFIED BY 'Likeyou1';
+echo "GRANT ALL PRIVILEGES ON chronam.* TO 'mbeccaria'@'%' IDENTIFIED BY 'Likeyou1';" | mysql -u root -p
+
+
+django-admin.py load_batch /data/batches/batch_nnyln_affirmed_ver01

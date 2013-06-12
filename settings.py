@@ -86,7 +86,7 @@ BROKER_TRANSPORT = "django"
 THUMBNAIL_WIDTH = 200
 
 DEFAULT_TTL_SECONDS = 86400  # 1 day
-PAGE_IMAGE_TTL_SECONDS = 60 * 60 * 24 * 7 * 2  # 2 weeks
+PAGE_IMAGE_TTL_SECONDS =  60 * 60 * 24 * 7 * 2  # 2 weeks
 API_TTL_SECONDS = 60 * 60  # 1 hour
 FEED_TTL_SECONDS = 60 * 60 * 24 * 7
 
@@ -95,13 +95,13 @@ USE_TIFF = False
 SOUTH_TESTS_MIGRATE = False
 ESSAYS_FEED = "http://ndnp-essays.rdc.lctl.gov/feed/"
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': '/var/tmp/django_cache',
-        'TIMEOUT': 4838400,  # 2 months
-    }
-}
+#CACHES = {
+#    'default': {
+#        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+#        'LOCATION': '/var/tmp/django_cache',
+#        'TIMEOUT': 4838400,  # 2 months
+#    }
+#}
 
 IS_PRODUCTION = True
 CTS_USERNAME = 'username'
@@ -122,7 +122,7 @@ SOLR_LANGUAGES = ("eng", "fre", "spa")
 
 DOCUMENT_ROOT = "/opt/chronam/static"
 
-STORAGE = '/data/'
+STORAGE = '/data/batch/'
 STORAGE_URL = '/data/'
 BATCH_STORAGE = os.path.join(STORAGE, "batches")
 BIB_STORAGE = os.path.join(STORAGE, "bib")
